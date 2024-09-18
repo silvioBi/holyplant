@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, FormEvent, ChangeEvent } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { LeafIcon, MailIcon, CalendarIcon, HeartIcon } from "lucide-react"
 import Image from 'next/image'
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Predefined list of world cities
-const worldCities = [
+const worldCities: string[] = [
   "New York, USA",
   "London, UK",
   "Paris, France",
@@ -32,15 +33,22 @@ const worldCities = [
   "Cape Town, South Africa"
 ];
 
+interface FormData {
+  email: string;
+  interest: string;
+  location: string;
+  additionalInfo: string;
+}
+
 // Custom hook for city suggestions
-function useCitySuggestions(inputRef) {
-  const [suggestions, setSuggestions] = useState([]);
+function useCitySuggestions(inputRef: React.RefObject<HTMLInputElement>): string[] {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     if (!inputRef.current) return;
 
     const handleInput = () => {
-      const query = inputRef.current.value.toLowerCase();
+      const query = inputRef.current?.value.toLowerCase() || '';
       if (query.length < 2) {
         setSuggestions([]);
         return;
@@ -65,21 +73,21 @@ function useCitySuggestions(inputRef) {
 }
 
 // Debounce function to limit suggestions updates
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
+function debounce<T extends (...args: unknown[]) => unknown>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return function executedFunction(...args: Parameters<T>) {
     const later = () => {
-      clearTimeout(timeout);
+      timeout = null;
       func(...args);
     };
-    clearTimeout(timeout);
+    if (timeout) clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
 }
 
-export default function LandingPage() {
-  const [result, setResult] = useState("");
-  const [formData, setFormData] = useState({
+export default function Page() {
+  const [result, setResult] = useState<string>("");
+  const [formData, setFormData] = useState<FormData>({
     email: '',
     interest: '',
     location: '',
@@ -88,14 +96,11 @@ export default function LandingPage() {
 
   const formRef = useRef<HTMLDivElement>(null)
   const locationInputRef = useRef<HTMLInputElement>(null)
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
 
-  const suggestions = useCitySuggestions(locationInputRef, (location) => {
-    setFormData(prev => ({ ...prev, location }));
-    setShowSuggestions(false);
-  });
+  const suggestions = useCitySuggestions(locationInputRef);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prevState => ({
       ...prevState,
@@ -106,14 +111,14 @@ export default function LandingPage() {
     }
   }
 
-  const handleSelectChange = (value) => {
+  const handleSelectChange = (value: string) => {
     setFormData(prevState => ({
       ...prevState,
       interest: value
     }))
   }
 
-  const onSubmit = async (event) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setResult("Sending....");
 
@@ -134,7 +139,12 @@ export default function LandingPage() {
 
     if (data.success) {
       setResult("Form Submitted Successfully");
-      event.target.reset();
+      setFormData({
+        email: '',
+        interest: '',
+        location: '',
+        additionalInfo: ''
+      });
     } else {
       console.log("Error", data);
       setResult(data.message);
@@ -162,7 +172,7 @@ export default function LandingPage() {
           <section className="relative bg-green-800 text-white">
             <div className="absolute inset-0 z-0">
               <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pexels-zunzun-studio-236007031-12248819-GyUP5c7Hr49nvBytfeNQHhSREBaI2u.jpg"
+                  src="/images/monstera-leaves.jpg"
                   alt="Lush green Monstera leaves"
                   layout="fill"
                   objectFit="cover"
@@ -188,8 +198,8 @@ export default function LandingPage() {
               <h2 className="text-3xl font-bold text-center text-green-900 mb-8">About HolyPlant</h2>
               <p className="text-lg text-center max-w-3xl mx-auto text-green-800">
                 HolyPlant is an innovative platform connecting plant owners with passionate plant sitters.
-                Whether you're going on vacation or need regular plant care assistance, our network of
-                verified plant enthusiasts is here to ensure your green friends thrive. We're currently
+                Whether you&apos;re going on vacation or need regular plant care assistance, our network of
+                verified plant enthusiasts is here to ensure your green friends thrive. We&apos;re currently
                 gearing up to launch our service and are excited to build a community of plant lovers!
               </p>
             </div>
@@ -222,6 +232,11 @@ export default function LandingPage() {
             <div className="container mx-auto px-4">
               <h2 className="text-3xl font-bold text-center text-green-900 mb-8">Join Our Waitlist</h2>
               <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
+                {result && (
+                    <Alert className="mb-4">
+                      <AlertDescription>{result}</AlertDescription>
+                    </Alert>
+                )}
                 <form onSubmit={onSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-green-800">Email</label>
@@ -237,7 +252,7 @@ export default function LandingPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="interest" className="block text-sm font-medium text-green-800">I'm interested in:</label>
+                    <label htmlFor="interest" className="block text-sm font-medium text-green-800">I&apos;m interested in:</label>
                     <Select onValueChange={handleSelectChange} value={formData.interest}>
                       <SelectTrigger className="w-full mt-1">
                         <SelectValue placeholder="Select an option" className="text-gray-400" />
@@ -272,7 +287,7 @@ export default function LandingPage() {
                                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                                     onClick={() => {
                                       setFormData(prev => ({ ...prev, location: city }));
-                                      locationInputRef.current.value = city;
+                                      if (locationInputRef.current) locationInputRef.current.value = city;
                                       setShowSuggestions(false);
                                     }}
                                 >
@@ -333,7 +348,13 @@ export default function LandingPage() {
   )
 }
 
-function FeatureCard({ icon, title, description }) {
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
       <div className="bg-white p-6 rounded-lg shadow-md text-center">
         <div className="flex justify-center mb-4">{icon}</div>
