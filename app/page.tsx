@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { LeafIcon, MailIcon, CalendarIcon, HeartIcon } from "lucide-react"
 import Image from 'next/image'
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {useRouter} from "next/navigation";
 
 // Predefined list of world cities
 const worldCities: string[] = [
@@ -93,6 +94,25 @@ export default function Page() {
     location: '',
     additionalInfo: ''
   })
+
+  const router = useRouter()
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      const { pathname, search, hash } = window.location
+      if (pathname === '/') {
+        const route = search.slice(2) || '/'
+        router.push(route + hash)
+      }
+    }
+
+    window.addEventListener('popstate', handleRouteChange)
+    handleRouteChange()
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange)
+    }
+  }, [router])
 
   const formRef = useRef<HTMLDivElement>(null)
   const locationInputRef = useRef<HTMLInputElement>(null)
