@@ -1,2 +1,2 @@
 ## TODOs
-- [ ] Add a loader and confirmation alert when submitting the form
+- [x] Add a loader and confirmation alert when submitting the form
