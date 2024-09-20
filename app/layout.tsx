@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: 'HolyPlant - Your Trusted Plant Sitting Service',
   description: "HolyPlant connects plant owners with passionate plant sitters. Find reliable care for your green friends while you're away.",
   keywords: ['plant sitting', 'plant care', 'plant sitter', 'house plants'],
+  icons: {
+    icon: '/favicon.ico',
+  },
   openGraph: {
     title: 'HolyPlant - Your Trusted Plant Sitting Service',
     description: "Find reliable care for your plants while you're away",
@@ -50,7 +53,6 @@ export default function RootLayout({
       <html lang="en">
       <head>
         <StructuredData/>
-        <link rel="icon" href="/favicon.ico" sizes="any"/>
       </head>
       <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
